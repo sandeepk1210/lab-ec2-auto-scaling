@@ -7,7 +7,7 @@ variable "key_pair_name" {
 }
 
 variable "ec2_autoscale_min_size" {
-  default = 0
+  default = 1
 }
 
 variable "ec2_autoscale_max_size" {
@@ -15,7 +15,7 @@ variable "ec2_autoscale_max_size" {
 }
 
 variable "ec2_autoscale_desired_capacity" {
-  default = 0
+  default = 1
 }
 
 variable "key_spec" {
@@ -31,5 +31,5 @@ variable "rotation_enabled" {
 }
 
 variable "kms_alias" {
-  default = "sk_kms_key"
+  default = "web_kms_key"
 }

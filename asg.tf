@@ -15,7 +15,7 @@ data "aws_ami" "amazon-linux-2" {
 # Creating the autoscaling launch template that contains AWS EC2 instance details
 resource "aws_launch_template" "autoscale_template" {
   # Defining the name of the Autoscaling launch configuration
-  name_prefix = "sk-launch-template"
+  name_prefix = "web-"
   description = "Launch Teamplate created via terraform"
   # Defining the image ID of AWS EC2 instance
   image_id = data.aws_ami.amazon-linux-2.id
@@ -24,8 +24,15 @@ resource "aws_launch_template" "autoscale_template" {
   # Defining the Key that will be used to access the AWS EC2 instance
   key_name = "automateinfra"
 
-  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  #vpc_security_group_ids = [aws_security_group.allow_ssh.id]
 
+  network_interfaces {
+    associate_public_ip_address = true
+    delete_on_termination       = true
+    security_groups             = [aws_security_group.allow_ssh.id]
+  }
+
+  user_data = filebase64("user_data.sh")
   iam_instance_profile {
     name = aws_iam_role.MySSMRole.name
   }
@@ -39,7 +46,7 @@ resource "aws_launch_template" "autoscale_template" {
       volume_type           = "gp2"
       encrypted             = true
       delete_on_termination = true
-      kms_key_id            = aws_kms_key.sk_kms_key.arn
+      kms_key_id            = aws_kms_key.web_kms_key.arn
     }
   }
 
@@ -79,13 +86,17 @@ resource "aws_launch_template" "autoscale_template" {
 }
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  name               = "sk-dev-asg"
+  name               = "web-dev-asg"
   availability_zones = [data.aws_availability_zones.availability_zones.names[0], data.aws_availability_zones.availability_zones.names[1], data.aws_availability_zones.availability_zones.names[2]]
   #availability_zones = [for s in data.aws_availability_zones.availability_zones : s.names]
   #availability_zones = [data.aws_availability_zones.availability_zones.names[*]]
-  desired_capacity = var.ec2_autoscale_min_size
-  max_size         = var.ec2_autoscale_max_size
-  min_size         = var.ec2_autoscale_desired_capacity
+  desired_capacity          = var.ec2_autoscale_min_size
+  max_size                  = var.ec2_autoscale_max_size
+  min_size                  = var.ec2_autoscale_desired_capacity
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+
+  load_balancers = [aws_elb.web_elb.id]
 
   launch_template {
     id      = aws_launch_template.autoscale_template.id
@@ -98,7 +109,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
   tag {
     key                 = "Name"
-    value               = "sk-dev-asg"
+    value               = "web-dev-asg"
     propagate_at_launch = false
   }
 

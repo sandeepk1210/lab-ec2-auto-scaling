@@ -1,5 +1,5 @@
 output "key_id" {
-  value = aws_kms_key.sk_kms_key.key_id
+  value = aws_kms_key.web_kms_key.key_id
 }
 
 output "account_id" {

@@ -1,4 +1,4 @@
-resource "aws_kms_key" "sk_kms_key" {
+resource "aws_kms_key" "web_kms_key" {
   description             = "SK KMS Key"
   deletion_window_in_days = 7
   is_enabled              = var.enabled
@@ -8,7 +8,7 @@ resource "aws_kms_key" "sk_kms_key" {
   enable_key_rotation = var.rotation_enabled
 
   tags = {
-    Name = "sk_kms_key"
+    Name = "web_kms_key"
   }
 
   policy = <<EOF
@@ -88,7 +88,7 @@ EOF
 }
 
 
-resource "aws_kms_alias" "sk_kms_alias" {
-  target_key_id = aws_kms_key.sk_kms_key.key_id
+resource "aws_kms_alias" "web_kms_alias" {
+  target_key_id = aws_kms_key.web_kms_key.key_id
   name          = "alias/${var.kms_alias}"
 }
