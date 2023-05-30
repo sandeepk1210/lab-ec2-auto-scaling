@@ -38,17 +38,17 @@ resource "aws_launch_template" "autoscale_template" {
   }
 
   #root disk
-  block_device_mappings {
-    device_name = "/dev/sdf"
+  # block_device_mappings {
+  #   device_name = "/dev/sdf"
 
-    ebs {
-      volume_size           = 20
-      volume_type           = "gp2"
-      encrypted             = true
-      delete_on_termination = true
-      kms_key_id            = aws_kms_key.web_kms_key.arn
-    }
-  }
+  #   ebs {
+  #     volume_size           = 20
+  #     volume_type           = "gp2"
+  #     encrypted             = true
+  #     delete_on_termination = true
+  #     kms_key_id            = aws_kms_key.web_kms_key.arn
+  #   }
+  # }
 
   #data disk
   block_device_mappings {
@@ -86,17 +86,32 @@ resource "aws_launch_template" "autoscale_template" {
 }
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  name               = "web-dev-asg"
-  availability_zones = [data.aws_availability_zones.availability_zones.names[0], data.aws_availability_zones.availability_zones.names[1], data.aws_availability_zones.availability_zones.names[2]]
+  name = "web-dev-asg"
+  availability_zones = [
+    data.aws_availability_zones.availability_zones.names[0],
+    data.aws_availability_zones.availability_zones.names[1],
+    data.aws_availability_zones.availability_zones.names[2]
+  ]
   #availability_zones = [for s in data.aws_availability_zones.availability_zones : s.names]
   #availability_zones = [data.aws_availability_zones.availability_zones.names[*]]
   desired_capacity          = var.ec2_autoscale_min_size
   max_size                  = var.ec2_autoscale_max_size
   min_size                  = var.ec2_autoscale_desired_capacity
   health_check_grace_period = 300
-  health_check_type         = "ELB"
+  health_check_type         = "EC2"
 
-  load_balancers = [aws_elb.web_elb.id]
+  enabled_metrics = [
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupMaxSize",
+    "GroupMinSize",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances",
+  ]
+
+  #load_balancers = [aws_lb.web_lb.id]
 
   launch_template {
     id      = aws_launch_template.autoscale_template.id
