@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "LogAutoScalingEvent-policy" {
   statement {
     effect    = "Allow"
     actions   = ["autoscaling:CompleteLifecycleAction"]
-    resources = ["arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${aws_autoscaling_group.autoscaling_group.name}"]
+    resources = ["arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${var.asg_name}"]
   }
 }
 
@@ -49,12 +49,16 @@ resource "aws_iam_role" "LogAutoScalingEvent-role" {
 #   role = aws_iam_role.MySSMRole.name
 # }
 
-resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
-  for_each = toset([
+locals {
+  policy_set = [
     aws_iam_policy.LogAutoScalingEvent-policy.arn,
     data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
-  ])
+  ]
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
+  count = length(local.policy_set)
 
   role       = aws_iam_role.LogAutoScalingEvent-role.name
-  policy_arn = each.value
+  policy_arn = local.policy_set[count.index]
 }

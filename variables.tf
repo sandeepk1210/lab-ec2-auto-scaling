@@ -6,12 +6,15 @@ variable "key_pair_name" {
   default = "automateinfra"
 }
 
+variable "asg_name" {
+  default = "web-dev-asg"
+}
 variable "ec2_autoscale_min_size" {
-  default = 1
+  default = 2
 }
 
 variable "ec2_autoscale_max_size" {
-  default = 1
+  default = 10
 }
 
 variable "ec2_autoscale_desired_capacity" {

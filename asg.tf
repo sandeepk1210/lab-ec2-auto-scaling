@@ -86,7 +86,7 @@ resource "aws_launch_template" "autoscale_template" {
 }
 
 resource "aws_autoscaling_group" "autoscaling_group" {
-  name = "web-dev-asg"
+  name = var.asg_name
   availability_zones = [
     data.aws_availability_zones.availability_zones.names[0],
     data.aws_availability_zones.availability_zones.names[1],
@@ -133,4 +133,12 @@ resource "aws_autoscaling_group" "autoscaling_group" {
     value               = "V_FAKE"
     propagate_at_launch = true
   }
+}
+
+resource "aws_autoscaling_lifecycle_hook" "autoscaling_lifecycle_hook" {
+  name                   = "autoscaling_lifecycle_hook"
+  autoscaling_group_name = aws_autoscaling_group.autoscaling_group.name
+  default_result         = "CONTINUE"
+  heartbeat_timeout      = 120
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 }
